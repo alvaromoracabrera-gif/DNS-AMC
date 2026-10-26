@@ -214,8 +214,8 @@ We have to configure first
 
 We type these two commands:
 ```
-dig @192.168.56.10 debian.alvaro.test
-nslookup debian.alvaro.test 192.168.56.10
+dig @192.168.57.11 debian.alvaro.test
+nslookup debian.alvaro.test 192.168.57.11
 ```
 The output must be this:
 ```
