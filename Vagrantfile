@@ -16,13 +16,13 @@ Vagrant.configure("2") do |config|
     
   end
 
-  config.vm.define "srv1" do |srv|
+  config.vm.define "srv2" do |srv|
 
     srv.vm.network "public_network", bridge: "enp64s0"
 
       # Red interna
     srv.vm.network "private_network",
-      ip: "192.168.57.10"
+      ip: "192.168.57.11"
 
 
     srv.vm.provision "shell",
