@@ -1,0 +1,15 @@
+;
+; 56.168.192
+;
+$TTL 86400
+@ IN SOA debian.alvaro.test. admin.alvaro.test. (
+        2026102201 ; Serial
+        3600       ; Refresh
+        1800       ; Retry
+        604800     ; Expire
+        86400 )    ; Negative Cache TTL
+;
+@   IN NS  debian.alvaro.test.
+@   IN NS  debian2.alvaro.test.
+10  IN PTR debian.alvaro.test.
+11  IN PTR debian2.alvaro.test.
