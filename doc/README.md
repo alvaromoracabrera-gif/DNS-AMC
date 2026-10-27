@@ -6,7 +6,8 @@ For making this practice, we should first create a Vagrantfile with the command:
 vagrant init -m debian/bookworm64
 ```
 Then, we should put this into the vagrantfile:
-```Vagrant.configure("2") do |config|
+```
+Vagrant.configure("2") do |config|
   config.vm.box = "debian/bookworm64"
 
 
@@ -30,7 +31,7 @@ Then, we should put this into the vagrantfile:
 
       # Red interna
     srv.vm.network "private_network",
-      ip: "192.168.56.10"
+      ip: "192.168.57.11"
 
 
     srv.vm.provision "shell",
@@ -208,7 +209,53 @@ Oct 26 21:28:39 bookworm named[2211]: zone 255.in-addr.arpa/IN: loaded serial 1
 ```
 ### Secondary server
 
-We have to configure first 
+We have to configure the secondary sever too to make the connection between main an secondary possible.
+
+For this, we have to edit again a file:
+
+```
+sudo nano /etc/bind/named.conf.options
+```
+Inside here:
+
+```
+acl confiables {
+    127.0.0.1;
+    192.168.57.0/24;
+};
+
+options {
+    directory "/var/cache/bind";
+    allow-transfer { none; };
+    listen-on port 53 { 127.0.0.1; 192.168.56.11; };
+    recursion yes;
+    allow-recursion { confiables; };
+    dnssec-validation auto;
+};
+```
+
+After editing that file, we have to edit the local one:
+
+```
+sudo nano /etc/bind/named.conf.local
+```
+
+And we put this code:
+
+```
+zone "alvaro.test" {
+    type slave;
+    masters { 192.168.57.10; };
+    file "/var/cache/bind/alvaro.test.dns";
+};
+
+zone "57.168.192.in-addr.arpa" {
+    type slave;
+    masters { 192.168.57.10; };
+    file "/var/cache/bind/alvaro.test.rev";
+};
+```
+With this, we are configuring the secondary DNS server for activating the reverse zones
 
 ### Verification with DIG and NSLOOKUP
 
@@ -248,4 +295,43 @@ Address:	192.168.57.11#53
 
 Name:	debian.alvaro.test
 Address: 192.168.57.10
+```
+
+## Extension Tags:
+### CNAME record:
+
+```
+vagrant@bookworm:~$ dig @192.168.57.11 web.maximo.test CNAME +short
+vagrant@bookworm:~$ nslookup -type=cname web.alvaro.test 192.168.57.11
+Server:		192.168.57.11
+Address:	192.168.57.11#53
+
+web.alvaro.test	canonical name = debian.alvaro.test.
+```
+
+### TXT RECORD:
+
+```
+vagrant@bookworm:~$ dig @192.168.57.11 web.maximo.test TXT +short
+vagrant@bookworm:~$ nslookup -type=cname web.alvaro.test 192.168.57.11
+Server:		192.168.57.11
+Address:	192.168.57.11#53
+
+web.alvaro.test	canonical name = debian.alvaro.test.
+
+vagrant@bookworm:~$ 
+```
+
+### PTR RECORD:
+
+```
+vagrant@bookworm:~$ dig @192.168.57.11 -x 192.168.57.11 +short
+debian2.alvaro.test.
+vagrant@bookworm:~$ nslookup -type=cname web.alvaro.test 192.168.57.11
+Server:		192.168.57.11
+Address:	192.168.57.11#53
+
+web.alvaro.test	canonical name = debian.alvaro.test.
+
+vagrant@bookworm:~$ 
 ```
